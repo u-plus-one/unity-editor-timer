@@ -1,0 +1,12 @@
+{
+  "name": "com.github.u-plus-one.editortimer",
+  "version": "1.0.0",
+  "displayName": "Editor Timer",
+  "description": "Editor utility that tracks time while the Unity editor is open.\n\nTimes are tracked separately for each user and divided into the following categories:\n\u25AA Active Time: Time spent with the Unity editor in focus\n\u25AA Idle Time: Time spent with the Unity editor in the background\n\u25AA Playmode Time: Time spent with the Unity editor in Playmode\n\u25AA Inactive Time: Time spent while AFK",
+  "unity": "2019.4",
+  "category": "",
+  "author": {
+    "name": "u+1",
+    "url": "https://github.com/u-plus-one"
+  }
+}
