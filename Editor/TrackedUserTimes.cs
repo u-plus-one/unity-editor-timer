@@ -7,7 +7,7 @@ namespace EditorTimeTracker
 	[System.Serializable]
 	public class TrackedUserTimes
 	{
-		public readonly string userId;
+		public readonly UserInfo user;
 		public SessionTimers storedSample;
 		public SessionTimers currentSessionSample;
 
@@ -15,22 +15,22 @@ namespace EditorTimeTracker
 
 		public bool IsDirty => currentSessionSample.CombinedTime > 0;
 
-		public bool IsAnon => string.IsNullOrEmpty(userId) || userId.ToLower() == "anonymous";
+		public bool IsAnon => user.IsEmpty || user.id.ToLower() == "anonymous";
 
 		public float TotalCurrentSessionTime => currentSessionSample.GetTotal(TrackedTimeType.All);
 
-		public string FileLocation => Path.Combine(EditorTimeTracker.FileRootDirectory, userId + ".json");
+		public string FileLocation => Path.Combine(EditorTimeTracker.FileRootDirectory, user + ".json");
 
-		private TrackedUserTimes(string userId)
+		private TrackedUserTimes(UserInfo user)
 		{
-			this.userId = userId;
+			this.user = user;
 		}
 
-		public static TrackedUserTimes Create(string userId)
+		public static TrackedUserTimes Create(UserInfo user)
 		{
-			var user = new TrackedUserTimes(userId);
-			user.Initialize();
-			return user;
+			var times = new TrackedUserTimes(user);
+			times.Initialize();
+			return times;
 		}
 
 		public void Initialize()
@@ -61,7 +61,7 @@ namespace EditorTimeTracker
 				}
 				catch(Exception e)
 				{
-					Debug.LogException(new Exception("Failed to load editor time data for user " + userId, e));
+					Debug.LogException(new Exception("Failed to load editor time data for user " + user, e));
 					FailedToLoad = true;
 				}
 			}
@@ -75,7 +75,7 @@ namespace EditorTimeTracker
 				}
 				catch(Exception e)
 				{
-					Debug.LogException(new Exception("Failed to create editor time data for user " + userId, e));
+					Debug.LogException(new Exception("Failed to create editor time data for user " + user, e));
 				}
 				FailedToLoad = false;
 			}
@@ -105,7 +105,7 @@ namespace EditorTimeTracker
 			}
 			catch(Exception e)
 			{
-				Debug.LogException(new Exception("Failed to save editor time data for user " + userId, e));
+				Debug.LogException(new Exception("Failed to save editor time data for user " + user, e));
 			}
 		}
 

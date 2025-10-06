@@ -34,12 +34,15 @@ namespace EditorTimeTracker
 				scrollPosition = scrollView.scrollPosition;
 				foreach(var kv in EditorTimeTracker.users)
 				{
-					bool isLocalUser = CloudProjectSettings.userId == kv.Key;
-					GUI.contentColor = isLocalUser ? new Color(0.3f, 1f, 0.3f) : Color.white;
+					if(Event.current.type == EventType.Repaint)
+					{
+						bool isLocalUser = UserUtility.GetCurrentUserInfo().id == kv.Key.id;
+						GUI.contentColor = isLocalUser ? new Color(0.3f, 1f, 0.3f) : Color.white;
+					}
 					GUILayout.Space(10);
 					GUILayout.BeginVertical(GUI.skin.box);
 					var user = kv.Value;
-					GUILayout.Label("User: " + kv.Key, EditorStyles.boldLabel);
+					GUILayout.Label("User: " + kv.Key.displayName, EditorStyles.boldLabel);
 					GUILayout.Space(5);
 					EditorGUILayout.LabelField("Total", ToTimeString(user.GetTotalTime()), EditorStyles.boldLabel);
 					EditorGUILayout.LabelField("Total (active)", ToTimeString(user.GetTotalTime(TrackedTimeType.AllActive)), EditorStyles.boldLabel);

@@ -10,7 +10,7 @@ namespace EditorTimeTracker
 	{
 		private const float MIN_SAVE_INTERVAL = 60;
 
-		internal static Dictionary<string, TrackedUserTimes> users = new Dictionary<string, TrackedUserTimes>();
+		internal static Dictionary<UserInfo, TrackedUserTimes> users = new Dictionary<UserInfo, TrackedUserTimes>();
 
 		private static double lastCheckTime;
 		private static double lastSaveTime;
@@ -20,9 +20,9 @@ namespace EditorTimeTracker
 
 		internal static string FileRootDirectory => Path.Combine(Directory.GetCurrentDirectory(), "EditorTimes");
 
-		public static float GetTotalTime(string userId, TrackedTimeType typeFlags = TrackedTimeType.All)
+		public static float GetTotalTime(UserInfo user, TrackedTimeType typeFlags = TrackedTimeType.All)
 		{
-			if(users.TryGetValue(userId, out var u))
+			if(users.TryGetValue(user, out var u))
 			{
 				return u.GetTotalTime(typeFlags);
 			}
@@ -55,7 +55,7 @@ namespace EditorTimeTracker
 			if(Enabled && lastCheckTime != 0)
 			{
 				float delta = (float)(EditorApplication.timeSinceStartup - lastCheckTime);
-				string user = GetUserName();
+				var user = UserUtility.GetCurrentUserInfo();
 				if(!users.ContainsKey(user))
 				{
 					users.Add(user, TrackedUserTimes.Create(user));
@@ -64,13 +64,6 @@ namespace EditorTimeTracker
 			}
 			lastCheckTime = EditorApplication.timeSinceStartup;
 			
-		}
-
-		private static string GetUserName()
-		{
-			string id = CloudProjectSettings.userId;
-			if(!string.IsNullOrWhiteSpace(id)) return id;
-			else return $"_{Environment.UserName}";
 		}
 
 		private static void Save(bool force)
