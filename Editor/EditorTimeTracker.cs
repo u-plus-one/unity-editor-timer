@@ -8,15 +8,49 @@ namespace EditorTimeTracker
 {
 	public static class EditorTimeTracker
 	{
-		private const float MIN_SAVE_INTERVAL = 60;
+		public enum State
+		{
+			Enabled = 0,
+			DisabledUntilRestart = 1,
+			Disabled = 2
+		}
+
+		private const float MIN_SAVE_INTERVAL = 10;
+
+		public static State TrackingState
+		{
+			get
+			{
+				int i = EditorPrefs.GetInt("TimeTrackingState", 0);
+				return (State)i;
+			}
+			set
+			{
+				EditorPrefs.SetInt("TimeTrackingState", (int)value);
+			}
+		}
 
 		internal static Dictionary<UserInfo, TrackedUserTimes> users = new Dictionary<UserInfo, TrackedUserTimes>();
+
+		public static TrackedUserTimes CurrentUser
+		{
+			get
+			{
+				var user = UserUtility.GetCurrentUserInfo();
+				if(!users.ContainsKey(user))
+				{
+					Debug.Log("Creating new user: " + user.id);
+					users.Add(user, TrackedUserTimes.Create(user));
+				}
+				return users[user];
+			}
+		}
 
 		private static double lastCheckTime;
 		private static double lastSaveTime;
 
 		//TODO: find a way to toggle this feature on and off
-		public static bool Enabled => true;
+		public static bool Enabled => TrackingState == State.Enabled;
 
 		internal static string FileRootDirectory => Path.Combine(Directory.GetCurrentDirectory(), "EditorTimes");
 
@@ -38,6 +72,17 @@ namespace EditorTimeTracker
 			EditorApplication.quitting += OnDestroy;
 			//Save data when the project is changed
 			EditorApplication.projectChanged += () => Save(false);
+			LoadAll();
+			if(!SessionState.GetBool("TimeTrackerFirstInit", false))
+			{
+				SessionState.SetBool("TimeTrackerFirstInit", true);
+				Debug.Log("Time tracking restarted");
+				if(TrackingState == State.DisabledUntilRestart)
+				{
+					//Enable tracker after restart
+					TrackingState = State.Enabled;
+				}
+			}
 		}
 
 		private static void DuringSceneGui(SceneView sv)
@@ -55,15 +100,36 @@ namespace EditorTimeTracker
 			if(Enabled && lastCheckTime != 0)
 			{
 				float delta = (float)(EditorApplication.timeSinceStartup - lastCheckTime);
-				var user = UserUtility.GetCurrentUserInfo();
-				if(!users.ContainsKey(user))
-				{
-					users.Add(user, TrackedUserTimes.Create(user));
-				}
-				users[user].Increase(delta);
+				CurrentUser.Increase(delta);
 			}
 			lastCheckTime = EditorApplication.timeSinceStartup;
 			
+		}
+
+		private static void LoadAll()
+		{
+			foreach(var file in Directory.GetFiles(FileRootDirectory, "*.json"))
+			{
+				UserInfo user;
+				TrackedUserTimes data;
+				try
+				{
+					data = TrackedUserTimes.Load(file, out user);
+				}
+				catch(Exception e)
+				{
+					Debug.LogException(new Exception("Failed to load editor time data from file " + file, e));
+					continue;
+				}
+				try
+				{
+					users.Add(user, data);
+				}
+				catch(Exception e)
+				{
+					Debug.LogException(e);
+				}
+			}
 		}
 
 		private static void Save(bool force)

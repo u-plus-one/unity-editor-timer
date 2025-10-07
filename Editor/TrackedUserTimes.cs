@@ -7,11 +7,34 @@ namespace EditorTimeTracker
 	[System.Serializable]
 	public class TrackedUserTimes
 	{
+		[System.Serializable]
+		public class SavedData
+		{
+			public string userId;
+			public string userName;
+			public SessionTimers times;
+
+			public SavedData(UserInfo user, SessionTimers times)
+			{
+				userId = user.id;
+				userName = user.displayName;
+				this.times = times;
+			}
+
+			public static SavedData FromJson(string json)
+			{
+				return JsonUtility.FromJson<SavedData>(json);
+			}
+
+			public string ToJson()
+			{
+				return JsonUtility.ToJson(this, true);
+			}
+		}
+
 		public readonly UserInfo user;
 		public SessionTimers storedSample;
 		public SessionTimers currentSessionSample;
-
-		public bool FailedToLoad { get; private set; }
 
 		public bool IsDirty => currentSessionSample.CombinedTime > 0;
 
@@ -19,7 +42,14 @@ namespace EditorTimeTracker
 
 		public float TotalCurrentSessionTime => currentSessionSample.GetTotal(TrackedTimeType.All);
 
-		public string FileLocation => Path.Combine(EditorTimeTracker.FileRootDirectory, user + ".json");
+		public string FileLocation
+		{
+			get
+			{
+				string name = user.IsEmpty ? "anon" : user.id;
+				return Path.Combine(EditorTimeTracker.FileRootDirectory, name + ".json");
+			}
+		}
 
 		private TrackedUserTimes(UserInfo user)
 		{
@@ -33,52 +63,24 @@ namespace EditorTimeTracker
 			return times;
 		}
 
+		public static TrackedUserTimes Load(string filename, out UserInfo user)
+		{
+			var json = File.ReadAllText(filename);
+			var save = SavedData.FromJson(json);
+			user = new UserInfo(save.userId, save.userName);
+			var times = Create(user);
+			times.storedSample = save.times;
+			return times;
+		}
+
 		public void Initialize()
 		{
-			LoadExistingTimes();
 			currentSessionSample = new SessionTimers();
 		}
 
 		public void Increase(float delta)
 		{
 			currentSessionSample.Increase(delta);
-		}
-
-		public void LoadExistingTimes()
-		{
-			if(!Directory.Exists(EditorTimeTracker.FileRootDirectory))
-			{
-				Directory.CreateDirectory(EditorTimeTracker.FileRootDirectory);
-			}
-			string filePath = FileLocation;
-			if(File.Exists(filePath))
-			{
-				try
-				{
-					var json = File.ReadAllText(FileLocation);
-					storedSample = JsonUtility.FromJson<SessionTimers>(json);
-					FailedToLoad = false;
-				}
-				catch(Exception e)
-				{
-					Debug.LogException(new Exception("Failed to load editor time data for user " + user, e));
-					FailedToLoad = true;
-				}
-			}
-			else
-			{
-				try
-				{
-					storedSample = new SessionTimers();
-					var json = JsonUtility.ToJson(storedSample);
-					File.WriteAllText(FileLocation, json);
-				}
-				catch(Exception e)
-				{
-					Debug.LogException(new Exception("Failed to create editor time data for user " + user, e));
-				}
-				FailedToLoad = false;
-			}
 		}
 
 		public void SaveToFile()
@@ -89,15 +91,10 @@ namespace EditorTimeTracker
 				{
 					Directory.CreateDirectory(EditorTimeTracker.FileRootDirectory);
 				}
-				if(FailedToLoad)
-				{
-					LoadExistingTimes();
-				}
-				if(FailedToLoad) return;
 
 				var totals = SessionTimers.Combine(currentSessionSample, storedSample);
-				var json = JsonUtility.ToJson(totals, true);
-				File.WriteAllText(FileLocation, json);
+				var save = new SavedData(user, totals);
+				File.WriteAllText(FileLocation, save.ToJson());
 
 				//Restart timers
 				storedSample = totals;
@@ -111,11 +108,6 @@ namespace EditorTimeTracker
 
 		public float GetTotalTime(TrackedTimeType typeFlags = TrackedTimeType.All)
 		{
-			if(FailedToLoad)
-			{
-				LoadExistingTimes();
-			}
-			if(FailedToLoad) return 0;
 			float t = 0;
 			if(storedSample != null) t += storedSample.GetTotal(typeFlags);
 			t += currentSessionSample.GetTotal(typeFlags);

@@ -21,7 +21,7 @@
 
 		public override int GetHashCode()
 		{
-			return id.GetHashCode();
+			return !IsEmpty ? id.GetHashCode() : 0;
 		}
 	}
 }
