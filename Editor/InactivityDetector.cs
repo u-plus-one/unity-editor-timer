@@ -66,8 +66,8 @@ namespace EditorTimeTracker
 			return Vector2Int.zero;
 		}
 
-		//TODO: AFK detection on mac doesn't seem to work for now
 #elif UNITY_EDITOR_OSX
+		//TODO: AFK detection on mac doesn't seem to work for now
 		//MacOS related methods for getting mouse position
 
 		[DllImport("/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics")]

@@ -46,6 +46,8 @@ namespace EditorTimeTracker
 			}
 		}
 
+		public static bool EditorIsFocussed => UnityEditorInternal.InternalEditorUtility.isApplicationActive;
+
 		private static double lastCheckTime;
 		private static double lastSaveTime;
 
@@ -76,11 +78,11 @@ namespace EditorTimeTracker
 			if(!SessionState.GetBool("TimeTrackerFirstInit", false))
 			{
 				SessionState.SetBool("TimeTrackerFirstInit", true);
-				Debug.Log("Time tracking restarted");
 				if(TrackingState == State.DisabledUntilRestart)
 				{
 					//Enable tracker after restart
 					TrackingState = State.Enabled;
+					Debug.Log("Time tracking restarted");
 				}
 			}
 		}

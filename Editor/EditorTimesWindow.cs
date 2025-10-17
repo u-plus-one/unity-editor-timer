@@ -10,7 +10,7 @@ namespace EditorTimeTracker
 	{
 		private Vector2 scrollPosition;
 
-		[MenuItem("Window/Editor Times")]
+		[MenuItem("Window/Time Tracking")]
 		public static void ShowWindow()
 		{
 			var window = GetWindow<EditorTimesWindow>("Editor Times");
@@ -19,6 +19,7 @@ namespace EditorTimeTracker
 
 		private void OnGUI()
 		{
+			EditorGUIUtility.labelWidth = 200;
 			GUILayout.Label("Editor Time Tracker", EditorStyles.largeLabel);
 
 			GUILayout.Space(10);
@@ -69,6 +70,8 @@ namespace EditorTimeTracker
 					DrawUser(kv.Value);
 				}
 			}
+
+			if(!Application.isPlaying && EditorTimeTracker.EditorIsFocussed) Repaint();
 		}
 
 		private static void DrawUser(TrackedUserTimes times)
@@ -82,6 +85,7 @@ namespace EditorTimeTracker
 			EditorGUILayout.LabelField("Total (active)", ToTimeString(times.GetTotalTime(TrackedTimeType.AllActive)), EditorStyles.boldLabel);
 			GUILayout.Space(5);
 			EditorGUILayout.LabelField("Unfocussed Editor Time", ToTimeString(times.GetTotalTime(TrackedTimeType.UnfocusedEditorTime)));
+			EditorGUILayout.LabelField("Active Editor Time", ToTimeString(times.GetTotalTime(TrackedTimeType.ActiveEditorTime)));
 			EditorGUILayout.LabelField("Playmode Time", ToTimeString(times.GetTotalTime(TrackedTimeType.PlaymodeTime)));
 			EditorGUILayout.LabelField("Inactive Time", ToTimeString(times.GetTotalTime(TrackedTimeType.InactiveTime)));
 			GUILayout.EndVertical();

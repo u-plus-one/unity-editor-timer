@@ -26,8 +26,7 @@ namespace EditorTimeTracker
 				}
 				else
 				{
-					bool focussed = UnityEditorInternal.InternalEditorUtility.isApplicationActive;
-					if(focussed) activeEditTime += delta;
+					if(EditorTimeTracker.EditorIsFocussed) activeEditTime += delta;
 					else unfocussedEditTime += delta;
 				}
 			}
