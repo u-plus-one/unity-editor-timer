@@ -4,10 +4,10 @@ using UnityEngine;
 
 namespace EditorTimeTracker
 {
-	[System.Serializable]
+	[Serializable]
 	public class TrackedUserTimes
 	{
-		[System.Serializable]
+		[Serializable]
 		public class SavedData
 		{
 			public string userId;

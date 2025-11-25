@@ -39,8 +39,9 @@ namespace EditorTimeTracker
 				var user = UserUtility.GetCurrentUserInfo();
 				if(!users.ContainsKey(user))
 				{
-					Debug.Log("Creating new user: " + user.id);
-					users.Add(user, TrackedUserTimes.Create(user));
+					var times = TrackedUserTimes.Create(user);
+					if(!times.IsAnon) Debug.Log("Creating new user: " + user.id);
+					users.Add(user, times);
 				}
 				return users[user];
 			}
@@ -51,7 +52,6 @@ namespace EditorTimeTracker
 		private static double lastCheckTime;
 		private static double lastSaveTime;
 
-		//TODO: find a way to toggle this feature on and off
 		public static bool Enabled => TrackingState == State.Enabled;
 
 		internal static string FileRootDirectory => Path.Combine(Directory.GetCurrentDirectory(), "EditorTimes");
